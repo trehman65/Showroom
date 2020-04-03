@@ -29,9 +29,13 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 //        let scene = SCNScene(named: "art.scnassets/ship.scn")!
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTap(_:)))
-
         sceneView.addGestureRecognizer(tapGesture)
         
+        let pinchGesture = UIPinchGestureRecognizer(target:self,action: #selector(didPinch(_:)))
+        sceneView.addGestureRecognizer(pinchGesture)
+        
+        let rotateGesture = UIRotationGestureRecognizer(target: self, action: #selector(didRotate(_:)))
+        sceneView.addGestureRecognizer(rotateGesture)
         // Set the scene to the view
 //        sceneView.scene = scene
     }
@@ -59,6 +63,64 @@ class ViewController: UIViewController, ARSCNViewDelegate {
           
         
        }
+    
+    private func addPinchGesture() {
+          let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(didPinch(_:)))
+          self.sceneView.addGestureRecognizer(pinchGesture)
+      }
+    
+    @objc func didPinch(_ gesture: UIPinchGestureRecognizer) {
+        
+//        print("Ready to scale!")
+
+    
+           switch gesture.state {
+           // 1
+           case .began:
+               gesture.scale = CGFloat(node.scale.x)
+           // 2
+           case .changed:
+               var newScale: SCNVector3
+       // a
+               if gesture.scale < 0.5 {
+                   newScale = SCNVector3(x: 0.5, y: 0.5, z: 0.5)
+       // b
+               } else if gesture.scale > 3 {
+                   newScale = SCNVector3(3, 3, 3)
+       // c
+               } else {
+                   newScale = SCNVector3(gesture.scale, gesture.scale, gesture.scale)
+               }
+       // d
+               node.scale = newScale
+           default:
+               break
+           }
+       }
+    
+    private func addRotationGesture() {
+           let panGesture = UIRotationGestureRecognizer(target: self, action: #selector(didRotate(_:)))
+           self.sceneView.addGestureRecognizer(panGesture)
+       }
+    
+    private var lastRotation: Float = 0
+    
+       @objc func didRotate(_ gesture: UIRotationGestureRecognizer) {
+        
+//        print("Ready to rotate!")
+        
+           switch gesture.state {
+           case .changed:
+               // 1
+               self.node.eulerAngles.y = self.lastRotation + Float(gesture.rotation)
+           case .ended:
+               // 2
+               self.lastRotation += Float(gesture.rotation)
+           default:
+               break
+           }
+       }
+    
     
  func addItemToPosition(_ position: SCNVector3) {
     
