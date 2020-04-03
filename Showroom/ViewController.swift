@@ -14,6 +14,8 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 
     @IBOutlet var sceneView: ARSCNView!
     
+    var count = 0
+        
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -21,23 +23,101 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         sceneView.delegate = self
         
         // Show statistics such as fps and timing information
-        sceneView.showsStatistics = true
+//        sceneView.showsStatistics = true
         
         // Create a new scene
-        let scene = SCNScene(named: "art.scnassets/ship.scn")!
+//        let scene = SCNScene(named: "art.scnassets/ship.scn")!
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTap(_:)))
+
+        sceneView.addGestureRecognizer(tapGesture)
         
         // Set the scene to the view
-        sceneView.scene = scene
+//        sceneView.scene = scene
     }
     
+    @objc
+       func didTap(_ gesture: UITapGestureRecognizer) {
+           let sceneViewTappedOn = gesture.view as! ARSCNView
+           let touchCoordinates = gesture.location(in: sceneViewTappedOn)
+           let hitTest = sceneViewTappedOn.hitTest(touchCoordinates, types: .existingPlaneUsingExtent)
+      
+
+           guard !hitTest.isEmpty, let hitTestResult = hitTest.first else {
+               return
+           }
+           
+           let position = SCNVector3(hitTestResult.worldTransform.columns.3.x,
+                                     hitTestResult.worldTransform.columns.3.y,
+                                     hitTestResult.worldTransform.columns.3.z)
+           
+            
+            addItemToPosition(position)
+
+        
+//           print(position)
+          
+        
+       }
+    
+ func addItemToPosition(_ position: SCNVector3) {
+    self.count+=1
+    
+       guard let url = Bundle.main.url(forResource: "chair",
+                                       withExtension: "usdz",
+                                       subdirectory: "art.scnassets") else { return }
+       
+       let scene = try! SCNScene(url: url, options: [.checkConsistency: true])
+       DispatchQueue.main.async {
+           if let node = scene.rootNode.childNode(withName: "chair", recursively: false) {
+            
+            if self.count == 1{
+            node.position = position
+            self.sceneView.scene.rootNode.addChildNode(node)
+            }
+            else{
+                print("Item already in the scene")
+            }
+           }
+       }
+   }
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         // Create a session configuration
         let configuration = ARWorldTrackingConfiguration()
+        configuration.planeDetection = .horizontal
+        
+        sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints]
 
         // Run the view's session
         sceneView.session.run(configuration)
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+      
+        if let planeAnchor = anchor as? ARPlaneAnchor {
+           
+            let plane = SCNPlane(width: CGFloat(planeAnchor.extent.x), height: CGFloat(planeAnchor.extent.z))
+            plane.firstMaterial?.diffuse.contents = UIColor(white: 1, alpha: 0)
+
+            let planeNode = SCNNode(geometry: plane)
+            planeNode.position = SCNVector3Make(planeAnchor.center.x, planeAnchor.center.x, planeAnchor.center.z)
+            planeNode.eulerAngles.x = -.pi / 2
+            
+            node.addChildNode(planeNode)
+        }
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+        if let planeAnchor = anchor as? ARPlaneAnchor,
+            let planeNode = node.childNodes.first,
+            let plane = planeNode.geometry as? SCNPlane {
+            plane.width = CGFloat(planeAnchor.extent.x)
+            plane.height = CGFloat(planeAnchor.extent.z)
+            planeNode.position = SCNVector3Make(planeAnchor.center.x, 0, planeAnchor.center.z)
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
