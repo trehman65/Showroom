@@ -13,9 +13,9 @@ import ARKit
 class ViewController: UIViewController, ARSCNViewDelegate {
 
     @IBOutlet var sceneView: ARSCNView!
-    
-    var count = 0
-        
+
+    private var node: SCNNode!
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -61,7 +61,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
        }
     
  func addItemToPosition(_ position: SCNVector3) {
-    self.count+=1
     
        guard let url = Bundle.main.url(forResource: "chair",
                                        withExtension: "usdz",
@@ -69,15 +68,20 @@ class ViewController: UIViewController, ARSCNViewDelegate {
        
        let scene = try! SCNScene(url: url, options: [.checkConsistency: true])
        DispatchQueue.main.async {
-           if let node = scene.rootNode.childNode(withName: "chair", recursively: false) {
+         
+        if let node = scene.rootNode.childNode(withName: "chair", recursively: false) {
             
-            if self.count == 1{
-            node.position = position
-            self.sceneView.scene.rootNode.addChildNode(node)
+            guard let xnode = self.node else{
+                node.position = position
+                self.node = node
+                self.sceneView.scene.rootNode.addChildNode(node)
+                
+                return
             }
-            else{
-                print("Item already in the scene")
-            }
+            xnode.position = SCNVector3Make(position.x, position.y, position.z)
+            self.sceneView.scene.rootNode.addChildNode(self.node)
+
+            
            }
        }
    }
