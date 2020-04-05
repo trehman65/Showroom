@@ -25,8 +25,8 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Show statistics such as fps and timing information
 //        sceneView.showsStatistics = true
         
-        // Create a new scene
-//        let scene = SCNScene(named: "art.scnassets/ship.scn")!
+        sceneView.antialiasingMode = .multisampling4X
+
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTap(_:)))
         sceneView.addGestureRecognizer(tapGesture)
@@ -37,8 +37,10 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let rotateGesture = UIRotationGestureRecognizer(target: self, action: #selector(didRotate(_:)))
         sceneView.addGestureRecognizer(rotateGesture)
         // Set the scene to the view
-//        sceneView.scene = scene
-    }
+        
+      
+
+}
     
     @objc
        func didTap(_ gesture: UITapGestureRecognizer) {
@@ -57,7 +59,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
            
             
             addItemToPosition(position)
-
         
 //           print(position)
           
@@ -121,29 +122,37 @@ class ViewController: UIViewController, ARSCNViewDelegate {
            }
        }
     
+
     
  func addItemToPosition(_ position: SCNVector3) {
+
+   guard let url = Bundle.main.url(forResource: "chair",
+                                   withExtension: "usdz",
+                                   subdirectory: "art.scnassets") else { return }
+
+   let scene = try! SCNScene(url: url, options: [.checkConsistency: true])
     
-       guard let url = Bundle.main.url(forResource: "chair",
-                                       withExtension: "usdz",
-                                       subdirectory: "art.scnassets") else { return }
-       
-       let scene = try! SCNScene(url: url, options: [.checkConsistency: true])
-       DispatchQueue.main.async {
-         
+    let spotLight = SCNNode()
+    spotLight.light = SCNLight()
+    spotLight.light?.type = .directional
+
+    sceneView.scene.rootNode.addChildNode(spotLight)
+
+    DispatchQueue.main.async {
+
         if let node = scene.rootNode.childNode(withName: "chair", recursively: false) {
-            
+
             guard let xnode = self.node else{
                 node.position = position
                 self.node = node
                 self.sceneView.scene.rootNode.addChildNode(node)
-                
+
                 return
             }
             xnode.position = SCNVector3Make(position.x, position.y, position.z)
             self.sceneView.scene.rootNode.addChildNode(self.node)
 
-            
+
            }
        }
    }
