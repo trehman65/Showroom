@@ -21,6 +21,15 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Set the view's delegate
         sceneView.delegate = self
+        addLight()
+
+//                let scene = SCNScene(named: "art.scnassets/ship.scn")!
+//        sceneView.scene = scene
+
+        
+       sceneView.antialiasingMode = .multisampling4X
+        
+        
         
         // Show statistics such as fps and timing information
 //        sceneView.showsStatistics = true
@@ -122,6 +131,49 @@ class ViewController: UIViewController, ARSCNViewDelegate {
            }
        }
     
+    
+    func addLight(){
+        
+//         let flourPlane = SCNFloor()
+//         let groundPlane = SCNNode()
+//         let groundMaterial = SCNMaterial()
+//         groundMaterial.lightingModel = .constant
+//         groundMaterial.writesToDepthBuffer = true
+//         groundMaterial.colorBufferWriteMask = []
+//         groundMaterial.isDoubleSided = true
+//         flourPlane.materials = [groundMaterial]
+//         groundPlane.geometry = flourPlane
+//         //
+//         sceneView.scene.rootNode.addChildNode(groundPlane)
+
+         // Create a ambient light
+         let ambientLight = SCNNode()
+         ambientLight.light = SCNLight()
+         ambientLight.light?.shadowMode = .deferred
+         ambientLight.light?.color = UIColor.white
+         ambientLight.light?.type = SCNLight.LightType.ambient
+         ambientLight.position = SCNVector3(x: 0,y: 5,z: 0)
+         
+         // Create a directional light node with shadow
+         let myNode = SCNNode()
+         myNode.light = SCNLight()
+         myNode.light?.type = SCNLight.LightType.directional
+         myNode.light?.color = UIColor.white
+         myNode.light?.castsShadow = true
+         myNode.light?.automaticallyAdjustsShadowProjection = true
+         myNode.light?.shadowSampleCount = 64
+         myNode.light?.shadowRadius = 16
+         myNode.light?.shadowMode = .deferred
+         myNode.light?.shadowMapSize = CGSize(width: 2048, height: 2048)
+         myNode.light?.shadowColor = UIColor.black.withAlphaComponent(0.75)
+         myNode.position = SCNVector3(x: 0,y: 5,z: 0)
+         myNode.eulerAngles = SCNVector3(-Float.pi / 2, 0, 0)
+         
+         // Add the lights to the container
+         sceneView.scene.rootNode.addChildNode(ambientLight)
+         sceneView.scene.rootNode.addChildNode(myNode)
+
+    }
 
     
  func addItemToPosition(_ position: SCNVector3) {
@@ -132,11 +184,12 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 
    let scene = try! SCNScene(url: url, options: [.checkConsistency: true])
     
-    let spotLight = SCNNode()
-    spotLight.light = SCNLight()
-    spotLight.light?.type = .directional
-
-    sceneView.scene.rootNode.addChildNode(spotLight)
+//    let spotLight = SCNNode()
+//    spotLight.light = SCNLight()
+//    spotLight.light?.type = .directional
+//
+//    sceneView.scene.rootNode.addChildNode(spotLight)
+ 
 
     DispatchQueue.main.async {
 
