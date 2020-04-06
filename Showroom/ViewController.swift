@@ -14,6 +14,9 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 
     @IBOutlet var sceneView: ARSCNView!
 
+    let coachingOverlay = ARCoachingOverlayView()
+
+
     private var node: SCNNode!
 
     override func viewDidLoad() {
@@ -26,7 +29,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 //                let scene = SCNScene(named: "art.scnassets/ship.scn")!
 //        sceneView.scene = scene
 
-        
+        setupCoachingOverlay()
        sceneView.antialiasingMode = .multisampling4X
         
         
@@ -35,6 +38,9 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 //        sceneView.showsStatistics = true
         
         sceneView.antialiasingMode = .multisampling4X
+        
+        setActivatesAutomatically()
+        setGoal()
 
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTap(_:)))
@@ -130,7 +136,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
                break
            }
        }
-    
+
     
     func addLight(){
         
@@ -184,11 +190,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 
    let scene = try! SCNScene(url: url, options: [.checkConsistency: true])
     
-//    let spotLight = SCNNode()
-//    spotLight.light = SCNLight()
-//    spotLight.light?.type = .directional
-//
-//    sceneView.scene.rootNode.addChildNode(spotLight)
  
 
     DispatchQueue.main.async {
@@ -254,6 +255,49 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Pause the view's session
         sceneView.session.pause()
     }
+    
+    func setGoal() {
+        coachingOverlay.goal = .horizontalPlane
+    }
+    
+    func setActivatesAutomatically() {
+        coachingOverlay.activatesAutomatically = true
+    }
+    
+    func coachingOverlayViewWillActivate(_ coachingOverlayView: ARCoachingOverlayView) {
+      }
+      
+      /// - Tag: PresentUI
+      func coachingOverlayViewDidDeactivate(_ coachingOverlayView: ARCoachingOverlayView) {
+      }
+
+      /// - Tag: StartOver
+      func coachingOverlayViewDidRequestSessionReset(_ coachingOverlayView: ARCoachingOverlayView) {
+      }
+
+      func setupCoachingOverlay() {
+          // Set up coaching view
+          coachingOverlay.session = sceneView.session
+//          coachingOverlay.delegate = self
+          
+          coachingOverlay.translatesAutoresizingMaskIntoConstraints = false
+          sceneView.addSubview(coachingOverlay)
+          
+          NSLayoutConstraint.activate([
+              coachingOverlay.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+              coachingOverlay.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+              coachingOverlay.widthAnchor.constraint(equalTo: view.widthAnchor),
+              coachingOverlay.heightAnchor.constraint(equalTo: view.heightAnchor)
+              ])
+          
+          setActivatesAutomatically()
+          
+          // Most of the virtual objects in this sample require a horizontal surface,
+          // therefore coach the user to find a horizontal plane.
+          setGoal()
+      }
+      
+
 
     // MARK: - ARSCNViewDelegate
     
